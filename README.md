@@ -1,0 +1,1 @@
+Receipt Auditor AI is an LLM-powered financial compliance backend that parses receipts, retrieves company policy context via RAG, detects anomalous transactions, and generates structured audit reports.
