@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+.env
+uploaded_files/
+.venv/
+.poetry/
