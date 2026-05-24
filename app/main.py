@@ -1,7 +1,7 @@
 # an AI-powered financial compliance backend that parses receipts, retrieves company policy context via RAG, performs anomaly analysis using LLM reasoning, and generates structured audit reports.
 
 from app.schemas.schema import InvoiceData
-from app.services.ai_service import ai_extraction
+from app.services.ai_service import ai_extraction, analyze_anomalies
 from app.services.upload_service import parse_receipt, save_upload
 from dotenv import load_dotenv
 from fastapi import FastAPI, File, UploadFile,  HTTPException
@@ -88,16 +88,16 @@ async def upload_file(file: UploadFile = File(...)):
         context = retrieve_relevant_policies(
             f"expense policy for {extracted_data.get('vendor_name', 'unknown vendor')}"
         )
+        audit_result = analyze_anomalies(extracted_data, context)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Policy retrieval failed: {e}")
-
-
+    
 
     return {
        **saved,
        "extracted data": extracted_data,
-       "context": context
+       "context": context,
+       "audit result": audit_result
     }
 
-    @app.get("/")
 
