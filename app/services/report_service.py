@@ -93,8 +93,8 @@ def generate_audit_report(
         ["Date", extracted_data.get("date") or "N/A"],
         ["Payment Method", extracted_data.get("payment_method") or "N/A"],
         ["Currency", extracted_data.get("currency") or "USD"],
-        ["Tax", f"${extracted_data.get('tax', 0):,.2f}"],
-        ["Total Amount", f"${extracted_data.get('total_amount', 0):,.2f}"],
+        ["Tax", f"${extracted_data.get('tax') or 0:,.2f}"],
+        ["Total Amount", f"${extracted_data.get('total_amount') or 0:,.2f}"],
     ]
     invoice_table = Table(invoice_data, colWidths=[2.5 * inch, 4 * inch])
     invoice_table.setStyle(TableStyle([
@@ -121,8 +121,9 @@ def generate_audit_report(
             line_data.append([
                 item.get("description", ""),
                 str(item.get("quantity", "")),
-                f"${item.get('unit_price', 0):,.2f}",
-                f"${item.get('total', 0):,.2f}",
+                f"${item.get('unit_price') or 0:,.2f}",
+                f"${item.get('total') or 0:,.2f}",
+
             ])
         line_table = Table(line_data, colWidths=[3.2 * inch, 0.8 * inch, 1.2 * inch, 1.3 * inch])
         line_table.setStyle(TableStyle([
