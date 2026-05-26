@@ -1,14 +1,18 @@
 import json
+import os
 from groq import Groq
-client = Groq()
 
-def ai_extraction(text: str):
+def get_client():
+    return Groq(api_key=os.getenv("GROQ_API_KEY"))
+
+def ai_extraction(text: str) -> dict:
+    client = get_client()
     completion = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
         messages=[
             {
                 "role": "system",
-"content": """You are an expert at extracting structured invoice data.
+                "content": """You are an expert at extracting structured invoice data.
 Always respond with valid JSON matching this exact structure:
 {
   "vendor_name": string or null,
@@ -27,24 +31,26 @@ Return only the JSON object. No explanation, no markdown, no extra text."""
                 "content": f"Extract the required fields from this text:\n\n{text}"
             }
         ],
-        response_format={
-            "type": "json_object",
-        },
+        response_format={"type": "json_object"},
         temperature=0.0
     )
-    
+
     raw_response = completion.choices[0].message.content
 
+    if not raw_response:                                       # ← guard here, before the try
+        raise ValueError("Groq returned an empty response")
+
     try:
-         parsed = completion.choices[0].message.content
-         return parsed.model_dump()
+        parsed = json.loads(raw_response)                      # ✅ Pylance now knows it's str
+        if not isinstance(parsed, dict):
+            raise ValueError(f"Expected dict, got {type(parsed)}")
+        return parsed
     except Exception as e:
-        return ValueError(F"LLM returned invalid structure: {e}\nRaw: {raw_response}")
-
-
+        raise ValueError(f"LLM returned invalid structure: {e}\nRaw: {raw_response}")
+    
 def analyze_anomalies(extracted_data: dict, policy_context: list[str]) -> dict:
+    client = get_client()
     policy_text = "\n\n".join(policy_context) if policy_context else "No policy context available."
-
     completion = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
         messages=[
@@ -77,4 +83,8 @@ Analyze this invoice against the policy and return your findings."""
     )
 
     raw = completion.choices[0].message.content
+
+    if not raw:
+        raise ValueError("Groq returned an empty response")
+
     return json.loads(raw)

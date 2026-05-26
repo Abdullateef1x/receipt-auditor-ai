@@ -1,0 +1,13 @@
+.env
+.git
+.gitignore
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache
+uploaded_files/
+policy_files/
+audit_reports/
+policy_db/
+.venv
