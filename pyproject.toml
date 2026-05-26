@@ -5,6 +5,7 @@ description = "AI financial auditing system"
 authors = [
     {name = "Abdullateef Alao",email = "aabdullateef557@gmail.com"}
 ]
+package-mode = false          
 requires-python = ">=3.12"
 dependencies = [
     "fastapi (>=0.136.1,<0.137.0)",
