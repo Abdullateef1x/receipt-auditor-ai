@@ -3,4 +3,6 @@ __pycache__/
 .env
 uploaded_files/
 .venv/
-.poetry/
+.poetry/audit_reports/
+policy_db/
+policy_files/

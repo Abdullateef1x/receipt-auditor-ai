@@ -30,15 +30,15 @@ async def upload_policy(file: UploadFile = File(...)):
             documents=chunks,
             embeddings=embeddings
         )
+        # ✅ return inside try — chunks is guaranteed to exist here
+        return {
+            "filename": file.filename,
+            "chunks_indexed": len(chunks),
+            "message": "Policy uploaded and indexed successfully",
+        }
     except Exception as e:
         Path(file_path).unlink(missing_ok=True)
         raise HTTPException(status_code=500, detail=f"Failed to index policy: {e}")
-
-    return {
-        "filename": file.filename,
-        "chunks_indexed": len(chunks),
-        "message": "Policy uploaded and indexed successfully",
-    }
 
 
 @router.get("/status")
