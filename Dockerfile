@@ -1,4 +1,3 @@
-# ── Stage 1: Builder ─────────────────────────────────────────
 FROM python:3.12-slim AS builder
 
 WORKDIR /app
@@ -16,17 +15,18 @@ ENV PATH="/root/.local/bin:$PATH"
 
 COPY pyproject.toml poetry.lock ./
 
-# ✅ Install CPU-only torch FIRST before poetry install
-# This prevents poetry from pulling 2GB+ CUDA/nvidia packages
-RUN pip install torch --index-url https://download.pytorch.org/whl/cpu --no-cache-dir
+# ✅ Install CPU-only torch BEFORE poetry touches it
+RUN pip install --no-cache-dir \
+    torch==2.2.2+cpu \
+    --index-url https://download.pytorch.org/whl/cpu
 
+# ✅ Now install everything else — torch is already satisfied
 RUN poetry config virtualenvs.create false \
-    && poetry install --only main --no-interaction --no-ansi
+    && poetry install --only main --no-interaction --no-ansi --no-root
 
 # ✅ Download model during build
 RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2')"
 
-# ── Stage 2: Runtime ─────────────────────────────────────────
 FROM python:3.12-slim AS runtime
 
 WORKDIR /app
