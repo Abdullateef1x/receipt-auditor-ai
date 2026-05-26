@@ -1,4 +1,4 @@
-from app.core.rag import chunking, collection, embedding_model
+from app.core.rag import chunking, collection
 from app.services.policy_service import parse_policy, save_policy
 from fastapi import APIRouter, File, HTTPException, UploadFile
 from pathlib import Path
@@ -24,11 +24,9 @@ async def upload_policy(file: UploadFile = File(...)):
     try:
         policy_id = saved["safe_name"]
         chunks = chunking(text)
-        embeddings = embedding_model.encode(chunks).tolist()
         collection.add(
             ids=[f"{policy_id}_chunk_{i}" for i in range(len(chunks))],
             documents=chunks,
-            embeddings=embeddings
         )
         # ✅ return inside try — chunks is guaranteed to exist here
         return {

@@ -1,9 +1,13 @@
-from sentence_transformers import SentenceTransformer
 import chromadb
+from chromadb.utils import embedding_functions
 
-embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
 chroma_client = chromadb.PersistentClient(path="./policy_db")
-collection = chroma_client.get_or_create_collection(name="company_policies")
+embedding_fn = embedding_functions.DefaultEmbeddingFunction()
+collection = chroma_client.get_or_create_collection(
+    name="company_policies",
+    embedding_function=embedding_fn # type: ignore[arg-type]
+
+)
 
 
 def chunking(text: str, chunk_size: int = 500, overlap: int = 50) -> list[str]:
@@ -17,18 +21,16 @@ def chunking(text: str, chunk_size: int = 500, overlap: int = 50) -> list[str]:
 
 
 def retrieve_relevant_policies(query: str, n_results: int = 3) -> list[str]:
-    query_embedding = embedding_model.encode([query])[0].tolist()
     results = collection.query(
-        query_embeddings=[query_embedding],
+        query_texts=[query],
         n_results=n_results,
         include=["documents"]
     )
-    if (
-        not results
-        or not results.get("documents")
-        or results.get("documents") is None
-        or not results["documents"]
-        or results["documents"][0] is None
-    ):
+    if not results or not results.get("documents"):
         return []
-    return results["documents"][0]
+    
+    documents = results["documents"]
+    if documents is None or len(documents) == 0:
+        return []
+    
+    return documents[0] or []

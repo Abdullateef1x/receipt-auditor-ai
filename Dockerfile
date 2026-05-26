@@ -15,17 +15,8 @@ ENV PATH="/root/.local/bin:$PATH"
 
 COPY pyproject.toml poetry.lock ./
 
-# ✅ Install CPU-only torch BEFORE poetry touches it
-RUN pip install --no-cache-dir \
-    torch==2.2.2+cpu \
-    --index-url https://download.pytorch.org/whl/cpu
-
-# ✅ Now install everything else — torch is already satisfied
 RUN poetry config virtualenvs.create false \
     && poetry install --only main --no-interaction --no-ansi --no-root
-
-# ✅ Download model during build
-RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2')"
 
 FROM python:3.12-slim AS runtime
 
@@ -37,7 +28,6 @@ RUN apt-get update && apt-get install -y \
 
 COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
 COPY --from=builder /usr/local/bin /usr/local/bin
-COPY --from=builder /root/.cache/huggingface /root/.cache/huggingface
 
 COPY ./app ./app
 
