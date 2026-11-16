@@ -61,7 +61,7 @@ async def upload_file(
         currency=extracted_data.get("currency"),
         payment_method=extracted_data.get("payment_method"),
         audit_status=audit_result.get("status", "unknown"),
-        confidence=audit_result.get("confidence", 0.0),
+        confidence = audit_result.get("confidence") or 0,
         recommendation=audit_result.get("recommendation", ""),
         anomalies_count=len(audit_result.get("anomalies", [])),
         report_pdf_url=report_url,

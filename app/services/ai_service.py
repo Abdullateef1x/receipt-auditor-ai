@@ -8,7 +8,7 @@ def get_client():
 def ai_extraction(text: str) -> dict:
     client = get_client()
     completion = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
+        model="openai/gpt-oss-120b",
         messages=[
             {
                 "role": "system",
@@ -52,7 +52,7 @@ def analyze_anomalies(extracted_data: dict, policy_context: list[str]) -> dict:
     client = get_client()
     policy_text = "\n\n".join(policy_context) if policy_context else "No policy context available."
     completion = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
+        model="openai/gpt-oss-120b",
         messages=[
             {
                 "role": "system",
