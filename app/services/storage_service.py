@@ -26,5 +26,13 @@ def upload_report_to_r2(report_path: str) -> str:
         ExtraArgs={"ContentType": "application/pdf"},
     )
 
-    public_url = os.getenv("R2_PUBLIC_URL")
-    return f"{public_url}/{object_key}"
+    report_url = client.generate_presigned_url(
+        "get_object",
+        Params={
+            "Bucket": bucket,
+            "Key": object_key,
+        },
+        ExpiresIn=3600,
+    )
+
+    return report_url
