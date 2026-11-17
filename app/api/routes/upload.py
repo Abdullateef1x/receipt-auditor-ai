@@ -29,14 +29,12 @@ async def upload_file(
 
     try:
         extracted_data = ai_extraction(text)
-        print("EXTRACTED DATA:", extracted_data)
     except Exception as e:
         Path(file_path).unlink(missing_ok=True)
         raise HTTPException(status_code=500, detail=f"AI extraction failed: {e}")
 
     try:
         validation_anomalies = validate_amounts(extracted_data)
-        print("VALIDATION ANOMALIES:", validation_anomalies)
     except Exception as e:
         raise HTTPException(
             status_code=500,
@@ -49,17 +47,37 @@ async def upload_file(
         )
         audit_result = analyze_anomalies(extracted_data, policy_context)
         audit_result["anomalies"].extend(validation_anomalies)
+        recommendation_messages = {
+            "total_amount": (
+                "A discrepancy was detected between the reported total "
+                "and the calculated line-item total. Verify the receipt amounts."
+            ),
+            "tax": (
+                "The tax amount is missing even though tax is excluded "
+                "from the line-item totals. Verify the tax amount."
+            ),
+            "tax_included": (
+                "Unable to determine whether tax is included in the "
+                "line-item totals. Verify the receipt's tax breakdown."
+            ),
+        }
+
+        recommendations = [
+            recommendation_messages[anomaly["field"]]
+            for anomaly in validation_anomalies
+            if anomaly["field"] in recommendation_messages
+        ]
+
         if validation_anomalies:
             audit_result["status"] = "flagged"
-            audit_result["recommendation"] = (
-                "A discrepancy was detected between the reported total "
-                "and the calculated line-item total. Verify the receipt "
-                "amounts before processing reimbursement."
-            )
-        
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Anomaly analysis failed: {e}")
 
+            if recommendations:
+                audit_result["recommendation"] = " ".join(recommendations)
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Anomaly analysis failed: {e}"
+        )
 
     try:
         report_path = generate_audit_report(

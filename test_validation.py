@@ -4,6 +4,7 @@ from app.services.validation_service import validate_amounts
 # Test 1: Matching totals
 test_1 = {
     "total_amount": 70.00,
+    "tax_included": True,
     "line_items": [
         {"total": 50.00},
         {"total": 10.00},
@@ -15,6 +16,7 @@ test_1 = {
 # Test 2: Mismatching totals
 test_2 = {
     "total_amount": 80.00,
+    "tax_included": True,
     "line_items": [
         {"total": 50.00},
         {"total": 10.00},
@@ -37,6 +39,7 @@ print("TEST 3:", validate_amounts(test_3))
 # Test 4: Difference smaller than one cent
 test_4 = {
     "total_amount": 70.005,
+    "tax_included": True,
     "line_items": [
         {"total": 70.00}
     ]
@@ -110,3 +113,31 @@ test_10 = {
 
 print("TEST 9:", validate_amounts(test_9))
 print("TEST 10:", validate_amounts(test_10))
+
+
+recommendation_messages = {
+    "total_amount": "Verify the reported and calculated totals.",
+    "tax": "Verify the missing tax amount.",
+    "tax_included": "Confirm whether tax is included in line-item totals."
+}
+
+test_anomalies = validate_amounts(test_9)
+
+recommendations = [
+    recommendation_messages[anomaly["field"]]
+    for anomaly in test_anomalies
+    if anomaly["field"] in recommendation_messages
+]
+
+print("TEST 9 RECOMMENDATIONS:", recommendations)
+
+
+test_anomalies = validate_amounts(test_8)
+
+recommendations = [
+    recommendation_messages[anomaly["field"]]
+    for anomaly in test_anomalies
+    if anomaly["field"] in recommendation_messages
+]
+
+print("TEST 8 RECOMMENDATIONS:", recommendations)
