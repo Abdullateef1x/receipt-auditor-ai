@@ -2,6 +2,7 @@ from app.core.rag import retrieve_relevant_policies
 from app.db.database import get_session
 from app.models.report import AuditReport
 from app.services.ai_service import ai_extraction, analyze_anomalies
+from app.services.validation_service import validate_amounts
 from app.services.report_service import generate_audit_report
 from app.services.storage_service import upload_report_to_r2
 from app.services.upload_service import parse_receipt, save_upload
@@ -28,17 +29,37 @@ async def upload_file(
 
     try:
         extracted_data = ai_extraction(text)
+        print("EXTRACTED DATA:", extracted_data)
     except Exception as e:
         Path(file_path).unlink(missing_ok=True)
         raise HTTPException(status_code=500, detail=f"AI extraction failed: {e}")
+
+    try:
+        validation_anomalies = validate_amounts(extracted_data)
+        print("VALIDATION ANOMALIES:", validation_anomalies)
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Receipt validation failed: {e}"
+        )
 
     try:
         policy_context = retrieve_relevant_policies(
             f"expense policy for {extracted_data.get('vendor_name', 'unknown vendor')}"
         )
         audit_result = analyze_anomalies(extracted_data, policy_context)
+        audit_result["anomalies"].extend(validation_anomalies)
+        if validation_anomalies:
+            audit_result["status"] = "flagged"
+            audit_result["recommendation"] = (
+                "A discrepancy was detected between the reported total "
+                "and the calculated line-item total. Verify the receipt "
+                "amounts before processing reimbursement."
+            )
+        
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Anomaly analysis failed: {e}")
+
 
     try:
         report_path = generate_audit_report(

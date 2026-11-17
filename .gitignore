@@ -7,3 +7,5 @@ uploaded_files/
 policy_db/
 policy_files/
 
+audit_reports/
+debug_policy.py
