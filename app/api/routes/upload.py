@@ -4,7 +4,7 @@ from app.models.report import AuditReport
 from app.services.ai_service import ai_extraction, analyze_anomalies
 from app.services.validation_service import validate_amounts
 from app.services.report_service import generate_audit_report
-from app.services.storage_service import upload_report_to_r2
+from app.services.storage_service import upload_report_to_r2, generate_report_download_url
 from app.services.upload_service import parse_receipt, save_upload
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from pathlib import Path
@@ -85,7 +85,7 @@ async def upload_file(
             audit_result=audit_result,
             original_filename=saved["filename"],
         )
-        report_url = upload_report_to_r2(report_path)
+        report_object_key = upload_report_to_r2(report_path)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Report generation failed: {e}")
 
@@ -103,7 +103,7 @@ async def upload_file(
         confidence = audit_result.get("confidence") or 0,
         recommendation=audit_result.get("recommendation", ""),
         anomalies_count=len(audit_result.get("anomalies", [])),
-        report_pdf_url=report_url,
+        report_pdf_url=report_object_key,
     )
     session.add(record)
     session.commit()
@@ -115,7 +115,7 @@ async def upload_file(
         "anomalies_count": len(audit_result.get("anomalies", [])),
         "recommendation": audit_result.get("recommendation"),
         "confidence": audit_result.get("confidence"),
-        "report_url": report_url,       
+        "report_url": generate_report_download_url(report_object_key),
         "created_at": record.created_at,
     }
 
@@ -135,7 +135,7 @@ def list_reports(session: Session = Depends(get_session)):
                 "status": r.audit_status,
                 "confidence": r.confidence,
                 "created_at": r.created_at,
-                "pdf_url": r.report_pdf_url,
+                "pdf_url": generate_report_download_url(r.report_pdf_url),
             }
             for r in reports
         ]

@@ -17,5 +17,5 @@ class AuditReport(SQLModel, table=True):
     confidence: float
     recommendation: str
     anomalies_count: int
-    report_pdf_url: str                      # R2 public URL
+    report_pdf_url: str                      # R2 object key; legacy rows may contain full URLs.
     created_at: datetime = Field(default_factory=datetime.utcnow)

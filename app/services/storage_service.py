@@ -1,6 +1,7 @@
 import os
 import boto3
 from pathlib import Path
+from urllib.parse import urlparse, unquote
 
 
 def get_r2_client():
@@ -16,6 +17,7 @@ def get_r2_client():
 def upload_report_to_r2(report_path: str) -> str:
     client = get_r2_client()
     bucket = os.getenv("R2_BUCKET_NAME")
+
     file_name = Path(report_path).name
     object_key = f"reports/{file_name}"
 
@@ -26,7 +28,23 @@ def upload_report_to_r2(report_path: str) -> str:
         ExtraArgs={"ContentType": "application/pdf"},
     )
 
-    report_url = client.generate_presigned_url(
+    return object_key
+
+
+def generate_report_download_url(object_key: str) -> str:
+    client = get_r2_client()
+    bucket = os.getenv("R2_BUCKET_NAME")
+
+    # Support older database records containing full URLs.
+    if object_key.startswith(("http://", "https://")):
+        object_key = unquote(urlparse(object_key).path.lstrip("/"))
+
+        # Remove the bucket prefix if the URL contains it.
+        bucket_prefix = f"{bucket}/"
+        if object_key.startswith(bucket_prefix):
+            object_key = object_key[len(bucket_prefix):]
+
+    return client.generate_presigned_url(
         "get_object",
         Params={
             "Bucket": bucket,
@@ -34,5 +52,3 @@ def upload_report_to_r2(report_path: str) -> str:
         },
         ExpiresIn=3600,
     )
-
-    return report_url
