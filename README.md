@@ -62,7 +62,7 @@ JSON API Response
 | Object Storage | Cloudflare R2 |
 | Database | Supabase PostgreSQL + SQLModel |
 | Containerization | Docker |
-| Deployment | Railway |
+| Deployment | Render |
 | Dependency Management | Poetry |
 
 ## 🏗️ Project Structure
@@ -297,6 +297,14 @@ Receipt Auditor AI demonstrates practical engineering work across:
 - Financial automation
 - Retrieval-Augmented Generation systems
 
+## Technical Documentation
+
+Explore the technical documentation and engineering articles for this project:
+
+**[View Technical Writing Portfolio](docs/README.md)**
+
+Includes the API Quickstart, API Reference, Render Deployment Tutorial, and Architecture Deep Dive.
+
 ## 📄 License
 
-[Add your chosen license here.]
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
